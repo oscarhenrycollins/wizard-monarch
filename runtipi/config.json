@@ -1,0 +1,29 @@
+{
+  "name": "Monarch",
+  "id": "wizard-monarch",
+  "wizard_type": "external",
+  "available": true,
+  "short_desc": "External: connect Monarch; apps get read-only accounts, balances and categorized transactions.",
+  "author": "Humanity Labs",
+  "port": 8806,
+  "categories": [
+    "finance"
+  ],
+  "description": "The Monarch connection for your Wizard. Sign in to Monarch once in Monarch's own window with Read access, and your apps get accounts, balances, categorized transactions, budget, cash flow and net worth. The sign-in stays inside this app.",
+  "tipi_version": 1,
+  "version": "0.1.0",
+  "source": "https://github.com/oscarhenrycollins/wizard-monarch",
+  "exposable": false,
+  "supported_architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "created_at": 1792760000000,
+  "updated_at": 1792760000000,
+  "dynamic_config": true,
+  "min_tipi_version": "4.8.0",
+  "uid": 1000,
+  "gid": 1000,
+  "form_fields": [],
+  "no_gui": false
+}

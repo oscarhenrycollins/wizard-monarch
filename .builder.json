@@ -1,0 +1,6 @@
+{
+  "request": "Connect Monarch through its official MCP so other apps can read accounts, balances and categorized transactions",
+  "template": "hello-wizard",
+  "state": "private_repo",
+  "name": "Monarch"
+}

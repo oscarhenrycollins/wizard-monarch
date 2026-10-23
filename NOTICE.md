@@ -1,0 +1,3 @@
+# Source and license notice
+
+Monarch (the Wizard app) started from the Wizard builder's hello-wizard template by way of the Teller connector (GPL-3.0-only, see LICENSE) and was rewritten as a client of Monarch's official MCP server (https://api.monarch.com/mcp). It is not made or endorsed by Monarch Money, Inc. Tool names it calls (GetAccounts, GetTransactions, ...) are Monarch's published MCP contract; no code was copied from third-party Monarch clients. The bundled `wizard-ui.css`, `boot.js` and `theme-client.js` are the template's unmodified appearance client. This repository contains no credentials, tokens or financial data.

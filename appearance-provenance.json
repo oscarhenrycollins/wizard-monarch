@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "component": "wizard-appearance-client-v1",
+  "origin_repo": "https://github.com/humanitylabs-org/wizard-ux",
+  "source_thread": "wizard_1791807054943_dc70b2bccb22",
+  "upstream_base_sha": "c5e7ed2607aa43bb94788e9eae48608597d9b2b5",
+  "source_status": "uncommitted App styling prototype snapshot; parent architecture candidate remains proposed",
+  "source_path": "web/demo/theme-client.js",
+  "source_lines": [
+    1,
+    36
+  ],
+  "sha256": "d6b61e59d75499b808d3e4c7bf4e8dfb2547b558cccd5eeb6bc3e1cac727f5c8",
+  "destination": "templates/wizard-monarch/web/theme-client.js",
+  "modified": false,
+  "license": "GPL-3.0-only (repository license)",
+  "adoption": "James explicitly requested builder skin inheritance MVP, 12 October 2026",
+  "contribution": "framework-independent appearance-only consumer; no agent/data authority",
+  "transitive_dependencies": []
+}

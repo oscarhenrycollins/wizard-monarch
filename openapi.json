@@ -1,0 +1,17 @@
+{
+  "openapi": "3.0.3",
+  "info": {"title": "Monarch", "version": "0.1.0"},
+  "paths": {
+    "/healthz": {"get": {"summary": "Health", "responses": {"200": {"description": "{ok,app,version,status,accounts}"}}}},
+    "/api/status": {"get": {"summary": "Connection status; never returns tokens", "responses": {"200": {"description": "{contract,status,banks,transactions,last_sync,calls_this_week,snapshots}"}}}},
+    "/api/accounts": {"get": {"summary": "Accounts with balances (local copy)", "responses": {"200": {"description": "{accounts}"}}}},
+    "/api/transactions": {"get": {"summary": "Search transactions: from, to, account, search, category, min_amount, max_amount, status, limit", "responses": {"200": {"description": "{count,transactions}"}}}},
+    "/api/snapshot": {"get": {"summary": "Monarch budget, cashflow, net_worth, recurring, categories or investments (kind=...)", "responses": {"200": {"description": "{kind,at,data}"}}}},
+    "/api/login/start": {"post": {"summary": "Begin Monarch sign-in (read-only scope); returns the Monarch authorize URL", "responses": {"200": {"description": "{url,return_address}"}}}},
+    "/api/login/finish": {"post": {"summary": "Finish sign-in with the address the browser landed on after Allow ({url})", "responses": {"200": {"description": "status"}, "400": {"description": "Missing, used or expired code"}}}},
+    "/api/sync": {"post": {"summary": "Sync now ({full: true} re-pulls the whole history)", "responses": {"200": {"description": "{synced, ...status}"}, "429": {"description": "Weekly Monarch limit used up"}}}},
+    "/api/settings": {"post": {"summary": "Save history_months (1-120)", "responses": {"200": {"description": "status"}}}},
+    "/api/disconnect": {"post": {"summary": "Revoke the Monarch sign-in and delete the local copy", "responses": {"200": {"description": "status"}}}},
+    "/mcp": {"post": {"summary": "MCP JSON-RPC (box-only): bank_status, bank_accounts, bank_transactions, bank_sync, monarch_snapshot, monarch_call", "responses": {"200": {"description": "JSON-RPC result"}}}}
+  }
+}

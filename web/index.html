@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" data-app="wizard-monarch">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <title>Monarch</title>
+  <script src="boot.js"></script>
+  <link rel="stylesheet" href="wizard-ui.css">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="theme-client.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="wz-app mn-app">
+    <main class="wz-scroll mn-scroll">
+      <p class="mn-lead" id="lead">Connect Monarch so your apps can see your accounts, balances and categorized transactions. Read-only: nothing here can change your Monarch data.</p>
+
+      <!-- Sign-in: two steps -->
+      <ol id="steps" class="mn-steps">
+        <li class="mn-step" id="s-open">
+          <div class="mn-step-h"><span class="mn-n">1</span><b>Sign in to Monarch</b></div>
+          <div class="mn-step-b">
+            <p>Monarch opens in a new tab. Sign in, approve the data notice, and choose <b>Read</b> access.</p>
+            <button type="button" class="mn-btn mn-go" id="open">Sign in to Monarch ↗</button>
+          </div>
+        </li>
+        <li class="mn-step" id="s-paste">
+          <div class="mn-step-h"><span class="mn-n">2</span><b>Paste the address you land on</b></div>
+          <div class="mn-step-b">
+            <p>After you tap <b>Allow</b>, the tab shows an error page. That's expected. Copy the whole address from that tab (it starts with <code>http://127.0.0.1</code>) and paste it here.</p>
+            <form id="paste-form" class="mn-row" autocomplete="off">
+              <input id="paste" class="wz-input" placeholder="http://127.0.0.1:8806/oauth/callback?code=…" spellcheck="false" autocapitalize="none" aria-label="Address after Allow" required>
+              <button class="mn-btn mn-go" type="submit" id="paste-go">Connect</button>
+            </form>
+            <button type="button" class="mn-link" id="again">Start over</button>
+          </div>
+        </li>
+      </ol>
+
+      <!-- Connected -->
+      <section id="conn" hidden>
+        <div class="mn-h"><h2>Your accounts</h2><button type="button" class="mn-btn mn-sm" id="sync">Sync now</button></div>
+        <p id="sync-note" class="mn-small"></p>
+        <div id="warn" class="mn-warn" hidden><span id="warn-t"></span><button type="button" class="mn-btn mn-go mn-sm" id="relogin" hidden>Sign in again</button></div>
+        <div class="mn-kpis" id="kpis"></div>
+        <div id="insts"></div>
+      </section>
+
+      <details class="mn-fold" id="settings">
+        <summary>Settings</summary>
+        <div class="mn-set">
+          <div class="mn-kv"><span>Access</span><b id="v-scope">—</b></div>
+          <div class="mn-kv"><span>History kept</span>
+            <select id="months" class="wz-input" aria-label="History kept">
+              <option value="12">1 year</option><option value="24">2 years</option><option value="36">3 years</option><option value="60">5 years</option>
+            </select>
+          </div>
+          <div class="mn-kv"><span>Monarch calls</span><b id="v-calls">—</b></div>
+          <p class="mn-small">Monarch limits MCP use per week, so this app keeps a copy and syncs twice a day. Your apps read the copy. See or revoke access in Monarch under Settings → MCP Connector.</p>
+          <button type="button" class="mn-btn mn-danger" id="disconnect" hidden>Disconnect Monarch</button>
+        </div>
+      </details>
+    </main>
+    <p id="status" class="wz-status" role="status" aria-live="polite"></p>
+  </div>
+</body>
+</html>
