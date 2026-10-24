@@ -31,7 +31,7 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 ROOT = Path(__file__).resolve().parent.parent if '__file__' in globals() else Path(os.environ.get('APP_ROOT', '.')).resolve()
 DATA = Path(os.environ.get('DATA_DIR', ROOT / '.data'))
 APP_ID = 'wizard-monarch'
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 PREFIX = '/' + APP_ID
 PORT = os.environ.get('PORT', '8806')
 BASE = os.environ.get('MONARCH_BASE', 'https://api.monarch.com').rstrip('/')
@@ -446,6 +446,8 @@ def _tool_args(name, args):
 
 
 def call_tool(name, args):
+    if not re.fullmatch(r'(Get|List)[A-Z][A-Za-z0-9]*', name or ''):
+        raise Problem(403, 'This connector only calls Monarch read tools.')
     args = _tool_args(name, args)
     cfg = _config()
     week = _week()
@@ -587,7 +589,7 @@ def _pull(start, end, depth=0):
         res = call_tool('GetTransactions', {'start_date': start.isoformat(), 'end_date': end.isoformat(),
                                           'limit': min(PAGE, 100), 'offset': offset, 'sort_by': 'date'})
         batch = _list_of(res, 'transactions')
-        total = res.get('total_count') if isinstance(res, dict) else None
+        total = _pick(res, 'transaction_count', 'total_count') if isinstance(res, dict) else None
         if isinstance(total, int):
             expected = total
         rows.extend(batch)
@@ -830,7 +832,7 @@ def live_call(args):
     t = next((t for t in tools if t['name'] == name), None)
     if not t:
         raise Problem(404, f'Monarch has no tool named {name}. Call without tool to list them.')
-    if not (t['readOnly'] or re.match(r'^(Get|List)[A-Z]', name)):
+    if not (t['readOnly'] and re.match(r'^(Get|List)[A-Z]', name)):
         raise Problem(403, 'This connector is read-only; it only passes through Monarch read tools.')
     a = args.get('arguments') or {}
     if not isinstance(a, dict):
@@ -973,6 +975,12 @@ class Handler(BaseHTTPRequestHandler):
             if path in ('/healthz', '/api/health'):
                 s = status()
                 return self.send(200, {'ok': True, 'app': APP_ID, 'version': VERSION, 'status': s['status'], 'accounts': sum(len(b['accounts']) for b in s['banks'])})
+            if path == '/api/connection':
+                cfg, tok = _config(), _tokens()
+                state = ('rate_limited' if (cfg.get('rate_limited_until') or 0) > time.time() else 'connected') if tok.get('access_token') else ('needs_login' if cfg.get('state') == 'needs_login' else 'not_connected')
+                return self.send(200, {'status': state, 'access': 'read' if tok.get('access_token') else None,
+                    'last_sync': cfg.get('last_sync'), 'last_error': cfg.get('last_error'),
+                    'syncing': bool(cfg.get('syncing')) and _ago(cfg.get('syncing')) < 1800, 'version': VERSION})
             if path == '/api/status':
                 return self.send(200, status())
             if path == '/api/accounts':

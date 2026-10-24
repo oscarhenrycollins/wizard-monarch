@@ -2,9 +2,25 @@
 process limit). Run from the repo root:  python3 tools/package.py"""
 import re
 import subprocess
+import sys
+import base64
+import json
 from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
+if '--check' in sys.argv:
+    import yaml
+    compose = yaml.safe_load((root / 'runtipi/docker-compose.yml').read_text())
+    command = compose['services']['wizard-monarch']['command'][-1]
+    assert len(command.encode()) < 120000, 'inline runtime argument exceeds safe size'
+    payload = re.search(r"base64.b64decode\('([A-Za-z0-9+/=]+)'\)", command)
+    assert payload, 'inline source payload missing'
+    files = json.loads(base64.b64decode(payload.group(1)))
+    for name, text in files.items():
+        assert (root / name).read_text() == text, f'stale packaged source: {name}'
+    assert 'app/server.py' in files and 'web/app.js' in files
+    print(f'PASS: {len(files)} embedded runtime files match source; argument {len(command.encode())} bytes')
+    raise SystemExit(0)
 subprocess.run(['wam', 'package-inline', str(root)], check=True, stdout=subprocess.DEVNULL)
 p = root / 'runtipi' / 'docker-compose.yml'
 t = p.read_text()
@@ -20,5 +36,6 @@ for old, new in swaps:
         raise SystemExit(f'package template changed; expected one {old.strip()!r}, found {t.count(old)}')
     t = t.replace(old, new)
 assert '/data/private' in t and '@sha256:' in t and '8799' not in t
+assert max(map(len, t.splitlines())) < 120000, 'compress payload before shipping'
 p.write_text(t)
 print('packaged', p.relative_to(root))

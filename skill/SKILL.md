@@ -1,7 +1,7 @@
 ---
 name: wizard-monarch
 description: Use when the owner asks about his Monarch data (accounts, net worth, spending, budget, cash flow, recurring bills, transactions).
-version: 0.1.0
+version: 0.1.1
 author: Hermes Agent
 license: GPL-3.0-only
 platforms: [linux, macos]

@@ -1,7 +1,8 @@
 {
   "openapi": "3.0.3",
-  "info": {"title": "Monarch", "version": "0.1.0"},
+  "info": {"title": "Monarch", "version": "0.1.1"},
   "paths": {
+    "/api/connection": {"get": {"summary": "Non-financial connection state for the setup screen", "responses": {"200": {"description": "{status,access,last_sync,last_error,syncing,version}; no credentials or financial rows"}}}},
     "/healthz": {"get": {"summary": "Health", "responses": {"200": {"description": "{ok,app,version,status,accounts}"}}}},
     "/api/status": {"get": {"summary": "Connection status; never returns tokens", "responses": {"200": {"description": "{contract,status,banks,transactions,last_sync,calls_this_week,snapshots}"}}}},
     "/api/accounts": {"get": {"summary": "Accounts with balances (local copy)", "responses": {"200": {"description": "{accounts}"}}}},

@@ -17,8 +17,9 @@ for kind in m.SNAPSHOTS:
 
 # Real FastMCP structured result envelope, exercised without credentials/network.
 import tempfile
+import os
 import json
-with tempfile.TemporaryDirectory(dir=Path.home() / '.hermes/cache/scratch') as temp:
+with tempfile.TemporaryDirectory(dir=os.environ.get('TMPDIR')) as temp:
     m.DATA = Path(temp)
     class RemoteStub:
         def request(self, method, params):
@@ -34,7 +35,7 @@ def call(name, args):
     offset = args['offset']
     calls.append(offset)
     batch = rows[offset:offset + args['limit']]
-    return {'total_count': len(rows), 'transactions': batch,
+    return {'transaction_count': len(rows), 'transactions': batch,
             'next_offset': offset + len(batch) if offset + len(batch) < len(rows) else None}
 m.call_tool = call
 saved = []
