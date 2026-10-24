@@ -466,11 +466,19 @@ def call_tool(name, args):
             raise MonarchError(403, 'scope', 'That Monarch tool needs write access, which this connector does not ask for.')
         raise MonarchError(502, 'tool', f'{name}: {text[:300] or "Monarch returned an error."}')
     if isinstance(r.get('structuredContent'), (dict, list)):
-        return r['structuredContent']
-    try:
-        return json.loads(text)
-    except ValueError:
-        return {'text': text}
+        value = r['structuredContent']
+    else:
+        try:
+            value = json.loads(text)
+        except ValueError:
+            value = {'text': text}
+    # FastMCP wraps JSON-returning tools in a structuredContent.result string.
+    if isinstance(value, dict) and set(value) == {'result'} and isinstance(value['result'], str):
+        try:
+            return json.loads(value['result'])
+        except ValueError:
+            pass
+    return value
 
 
 # ---------------- sync into the local copy ----------------
@@ -530,6 +538,8 @@ def _save_accounts(rows):
                     seen.append(aid)
                     tname = _text(_pick(a, 'type', 'type.display', 'account_type'))
                     is_asset = _pick(a, 'is_asset', 'isAsset')
+                    if is_asset is None:
+                        is_asset = _kind(tname, None) not in ('credit', 'loan', 'liability')
                     c.execute('INSERT OR REPLACE INTO accounts VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (
                         aid, _text(_pick(a, 'name', 'display_name', 'displayName')), _text(_pick(a, 'institution', 'institution.name')), tname,
                         _kind(tname, is_asset), _text(_pick(a, 'sub_type', 'subtype', 'subtype.display')), _text(_pick(a, 'mask', 'last_four')),

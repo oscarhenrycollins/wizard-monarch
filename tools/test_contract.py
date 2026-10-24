@@ -4,6 +4,7 @@ import datetime as dt
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location('monarch', Path(__file__).resolve().parents[1] / 'app/server.py')
+assert spec is not None and spec.loader is not None
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 assert m._tool_args('GetAccounts', {}) == {'intent': 'organizing_finances'}
@@ -13,6 +14,18 @@ for kind in m.SNAPSHOTS:
     a, missing = m._fill_args({'properties': {'intent': {}, 'start_date': {}, 'end_date': {}},
                              'required': ['intent', 'start_date', 'end_date']}, kind)
     assert not missing and a['intent'] != 'other'
+
+# Real FastMCP structured result envelope, exercised without credentials/network.
+import tempfile
+import json
+with tempfile.TemporaryDirectory(dir=Path.home() / '.hermes/cache/scratch') as temp:
+    m.DATA = Path(temp)
+    class RemoteStub:
+        def request(self, method, params):
+            assert params['arguments']['intent'] == 'organizing_finances'
+            return {'structuredContent': {'result': json.dumps({'accounts': []})}}
+    m.REMOTE_CLIENT = RemoteStub()
+    assert m.call_tool('GetAccounts', {}) == {'accounts': []}
 
 calls = []
 rows = [{'id': str(i)} for i in range(251)]
