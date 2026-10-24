@@ -434,7 +434,19 @@ def _rate_limited(msg):
     _update_config(rate_limited_until=time.time() + 24 * 3600, last_error=msg)
 
 
+def _tool_args(name, args):
+    # Generic task labels only: never send private conversation context as provider telemetry.
+    out = dict(args or {})
+    intents = {'GetBudget': 'budgeting', 'GetCashFlow': 'cash_flow_planning',
+               'GetNetWorthHistory': 'net_worth_tracking', 'GetInvestments': 'investment_tracking',
+               'GetRecurring': 'bills_and_subscriptions', 'GetGoals': 'savings_goals',
+               'GetSpendingByCategory': 'spending_analysis'}
+    out.setdefault('intent', intents.get(name, 'organizing_finances'))
+    return out
+
+
 def call_tool(name, args):
+    args = _tool_args(name, args)
     cfg = _config()
     week = _week()
     calls = cfg.get('calls') if cfg.get('calls_week') == week else 0
@@ -559,21 +571,38 @@ def _save_transactions(rows, start, end, complete):
 
 
 def _pull(start, end, depth=0):
-    res = call_tool('GetTransactions', {'start_date': start.isoformat(), 'end_date': end.isoformat(), 'limit': PAGE, 'sort_by': 'date'})
-    rows = _list_of(res, 'transactions')
-    total = res.get('total_count') if isinstance(res, dict) else None
-    total = total if isinstance(total, int) else len(rows)
-    if total > len(rows) and start < end and depth < 8:
-        mid = start + (end - start) // 2
-        return _pull(start, mid, depth + 1) + _pull(mid + dt.timedelta(days=1), end, depth + 1)
-    return _save_transactions(rows, start.isoformat(), end.isoformat(), complete=total <= len(rows))
+    # Official MCP now caps pages at 100 and returns next_offset.
+    rows, offset, expected = [], 0, None
+    while True:
+        res = call_tool('GetTransactions', {'start_date': start.isoformat(), 'end_date': end.isoformat(),
+                                          'limit': min(PAGE, 100), 'offset': offset, 'sort_by': 'date'})
+        batch = _list_of(res, 'transactions')
+        total = res.get('total_count') if isinstance(res, dict) else None
+        if isinstance(total, int):
+            expected = total
+        rows.extend(batch)
+        nxt = res.get('next_offset') if isinstance(res, dict) else None
+        if nxt is None:
+            if expected is not None and len(rows) < expected:
+                if not batch:
+                    raise MonarchError(502, 'pagination', 'Monarch ended transaction paging before the total was reached.')
+                nxt = offset + len(batch)
+            else:
+                break
+        if not isinstance(nxt, int) or nxt <= offset or not batch:
+            raise MonarchError(502, 'pagination', 'Monarch returned an invalid transaction page cursor.')
+        offset = nxt
+    ids = [str(_pick(t, 'id', 'transaction_id') or '') for t in rows]
+    if len(set(ids)) != len(rows) or '' in ids or (expected is not None and len(rows) != expected):
+        raise MonarchError(502, 'pagination', 'Monarch transaction pages did not match the reported total; retry the sync.')
+    return _save_transactions(rows, start.isoformat(), end.isoformat(), complete=True)
 
 
 def _fill_args(schema, kind):
     props = (schema or {}).get('properties') or {}
     req = (schema or {}).get('required') or []
     today = dt.date.today()
-    out = {}
+    out = _tool_args(SNAPSHOTS.get(kind, ''), {})
     for name in props:
         n = name.lower()
         if 'start' in n and 'date' in n:
